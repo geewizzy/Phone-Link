@@ -1,0 +1,47 @@
+# Trying to get Phone Link to work (Powershell)
+
+# The complete way
+# 1. Set Bluetooth Support Service to Automatic and Start it
+Write-Host "Configuring Bluetooth Support Service..." -ForegroundColor Cyan
+Set-Service -Name "bthsvcs" -StartupType Automatic
+Start-Service -Name "bthsvcs" -ErrorAction SilentlyContinue
+
+# 2. Enable Global Background Apps Permission
+Write-Host "Enabling global background apps permission..." -ForegroundColor Cyan
+$PrivacyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications"
+if (-not (Test-Path $PrivacyPath)) { New-Item -Path $PrivacyPath -Force | Out-Null }
+New-ItemProperty -Path $PrivacyPath -Name "GlobalUserConfiguredBackgroundState" -Value 1 -PropertyType DWord -Force | Out-Null
+
+# 3. Set Phone Link App Permission to "Always" in Background
+Write-Host "Setting Phone Link background permission to Always..." -ForegroundColor Cyan
+$PhoneLinkPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.YourPhone_8wekyb3d8bbwe"
+if (-not (Test-Path $PhoneLinkPath)) { New-Item -Path $PhoneLinkPath -Force | Out-Null }
+New-ItemProperty -Path $PhoneLinkPath -Name "Disabled" -Value 0 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path $PhoneLinkPath -Name "DisabledByUser" -Value 0 -PropertyType DWord -Force | Out-Null
+
+# 4. Enable Cross-Device Experiences (Shared Experiences)
+Write-Host "Enabling Cross-Device Experiences..." -ForegroundColor Cyan
+$CDPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\CDP"
+if (-not (Test-Path $CDPath)) { New-Item -Path $CDPath -Force | Out-Null }
+New-ItemProperty -Path $CDPath -Name "CdpSessionUserAuthPolicy" -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path $CDPath -Name "NearShareChannelUserAuthPolicy" -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path $CDPath -Name "RomeSdkChannelUserAuthPolicy" -Value 1 -PropertyType DWord -Force | Out-Null
+
+Write-Host "All configurations applied! Please restart your PC for changes to take full effect." -ForegroundColor Green
+
+
+# ------------------------------------------------
+
+# Safer way 
+# Safer, scoped version: Only targets Bluetooth and Phone Link
+Set-Service -Name "bthserv" -StartupType Automatic
+Start-Service -Name "bthserv" -ErrorAction SilentlyContinue
+
+$PhoneLinkPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.YourPhone_8wekyb3d8bbwe"
+if (-not (Test-Path $PhoneLinkPath)) { New-Item -Path $PhoneLinkPath -Force | Out-Null }
+New-ItemProperty -Path $PhoneLinkPath -Name "Disabled" -Value 0 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path $PhoneLinkPath -Name "DisabledByUser" -Value 0 -PropertyType DWord -Force | Out-Null
+
+Write-Host "Scoped changes applied successfully!" -ForegroundColor Green
+
+
